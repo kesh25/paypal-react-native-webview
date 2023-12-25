@@ -1,0 +1,91 @@
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>PayPal Option for React Native Webview</title>
+        <script src="https://www.paypal.com/sdk/js?client-id=AX4LSm0d5iDb_SUhNoI3gBILXFEskCSzWwtfQrwGLSGCFz5kcyJ0vGGqDCl3e0PCAXlTS8lYMSwB2kTx&currency=USD"></script>
+        <style>
+            body,
+            html{
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            }
+            .container {
+                height: 100%;
+                display: flex;
+                overflow-y: scroll;
+                justify-content: center;
+                align-items: center
+            }
+            #preloaderSpinner {
+                display: none
+            }
+        </style>
+    </head> 
+    <body>
+        <div class="container">
+            <div style="justify-content: center; text-align: center">
+                <div id="paypal-button-container"></div>
+            </div>
+        </div>
+        <script>
+            function payWithPayPal(e, n) {
+                 
+                var Errors = ()=> console.error('Please Supply valid Props , For More Info Visit : https://github.com/nirikshan/RNExpo-Paypal-integration');
+                var ProductionClientID = e.ProductionClientID;
+                if(null == ProductionClientID || null == e.orderID){
+                    Errors();
+                }
+                paypal.Buttons({
+                    env: "live",
+                    client: {
+                        production: ProductionClientID
+                    },
+                    commit: !0,
+                    createOrder: function(n, t) {
+                        return t.order.create({
+                            purchase_units: [{
+                                amount: {
+                                    value: e
+                                }
+                            }]
+                        })
+                    },
+                    onAuthorize: function(e, n) {
+                        return n.payment.execute().then(function() {
+                            window.alert("Payment Complete!")
+                        })
+                    },
+                    onApprove: function(e, n) {
+                        window.postMessage(JSON.stringify({
+                            reference: e.orderID,
+                            message: "Transaction Successful",
+                            status: "Success"
+                        }))
+                    },
+                    onCancel: function(e) {
+                        window.postMessage(JSON.stringify({
+                            reference: null,
+                            message: "Transaction failed",
+                            status: "Failed"
+                        }))
+                    }
+                }).render("#paypal-button-container")
+            }
+            document.addEventListener("message", function(e) {
+                var n = JSON.parse(e.data);
+                alert(e.data)
+                if(null == n.ProductionClientID || null == n.orderID || null == n.amount){
+                    Errors();
+                }
+                let message = `USD: ${n.amount} will be transferred to ${n.company}. Choose an option to proceed.`
+                document.querySelector("p").innerText = message, payWithPayPal(n.amount, n.orderID)
+            });
+        </script>
+    </body>
+  
+    </html>
